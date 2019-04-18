@@ -1,0 +1,122 @@
+diff --git a/Engine/csound_orc_expressions.c b/Engine/csound_orc_expressions.c
+index 1d7649691..e1e3c7710 100644
+--- a/Engine/csound_orc_expressions.c
++++ b/Engine/csound_orc_expressions.c
+@@ -367,7 +367,7 @@ static char* create_out_arg_for_expression(CSOUND* csound, char* op, TREE* left,
+     char* argString = csound->Calloc(csound, 80);
+ 
+     strNcpy(argString, leftArgType, 80);
+-    strlcat(argString, rightArgType, 80);
++    cs_strlcat(argString, sizeof(argString), rightArgType);
+     outType = resolve_opcode_get_outarg(csound, opentries, argString);
+ 
+     csound->Free(csound, argString);
+diff --git a/InOut/winEPS.c b/InOut/winEPS.c
+index 8d358a42d..d155ebd00 100644
+--- a/InOut/winEPS.c
++++ b/InOut/winEPS.c
+@@ -128,7 +128,7 @@ void PS_MakeGraph(CSOUND *csound, WINDAT *wdptr, const char *name)
+     strNcpy(pathnam, filenam, 1024); //pathnam[1023] = '\0';
+     t = strrchr(pathnam, '.');
+     if (t != NULL) *t = '\0';
+-    strlcat(pathnam, ".eps", 1024);
++    cs_strlcat(pathnam, 1024, ".eps");
+     pp->psfd = csound->FileOpen2(csound, &(pp->psFile), CSFILE_STD, pathnam,
+                                    "w", "SFDIR", CSFTYPE_POSTSCRIPT, 0);
+     if (UNLIKELY(pp->psfd == NULL)) {
+@@ -458,4 +458,3 @@ int PS_ExitGraph(CSOUND *csound)
+     }
+     return 0;
+ }
+-
+diff --git a/OOps/dumpf.c b/OOps/dumpf.c
+index 8b89bbe66..c3e085367 100644
+--- a/OOps/dumpf.c
++++ b/OOps/dumpf.c
+@@ -290,19 +290,19 @@ static void nkdump(CSOUND *csound, MYFLT *kp, FILE *ofd, int32_t format,
+       outbuf[0] = '\0';
+       while (--nk) {
+         snprintf(buf1, 256, "%" PRId64 "\t", (int64_t)*kp++);
+-        strlcat(outbuf, buf1, 256);
++        cs_strlcat(outbuf, 256, buf1);
+       }
+       snprintf(buf1, 256, "%" PRId64 "\n", (int64_t)*kp);
+-      strlcat(outbuf, buf1, 256);
++      cs_strlcat(outbuf, 256, buf1);
+       len = strlen(outbuf);
+       break;
+     case 8: *outbuf = '\0';
+       while (--nk) {
+         CS_SPRINTF(buf1, "%6.4f\t", *kp++);
+-        strlcat(outbuf, buf1, 256);
++        cs_strlcat(outbuf, 256, buf1);
+       }
+       CS_SPRINTF(buf1, "%6.4f\n", *kp);
+-      strlcat(outbuf, buf1, 256);
++      cs_strlcat(outbuf, 256, buf1);
+       len = strlen(outbuf);
+       break;
+     default:
+diff --git a/Top/getstring.c b/Top/getstring.c
+index c51c0bd8f..daa1b8c22 100644
+--- a/Top/getstring.c
++++ b/Top/getstring.c
+@@ -307,5 +307,14 @@ PUBLIC int cs_sscanf(char *str, const char *format, ...)
+     return retVal;
+ }
+ 
++PUBLIC void cs_strlcat (char *dest, size_t n, const char *src)
++{	strncat (dest, src, n - strlen (dest) - 1) ;
++	dest [n - 1] = 0 ;
++}
++
++PUBLIC void cs_strlcpy (char *dest, size_t n, const char *src)
++{	strncpy (dest, src, n - 1) ;
++	dest [n - 1] = 0 ;
++}
+ #endif
+ #endif
+diff --git a/Top/one_file.c b/Top/one_file.c
+index ab36adfcc..1da884a61 100644
+--- a/Top/one_file.c
++++ b/Top/one_file.c
+@@ -91,7 +91,7 @@ CS_NOINLINE char *csoundTmpFileName(CSOUND *csound, const char *ext)
+         s = _tempnam(s, "cs");
+         if (UNLIKELY(s == NULL))
+           csound->Die(csound, Str(" *** cannot create temporary file"));
+-        strNcpy(lbuf, s, nBytes);
++        strNcpy(lbuf, nBytes, s);
+         free(s);
+       }
+ #endif
+@@ -103,7 +103,7 @@ CS_NOINLINE char *csoundTmpFileName(CSOUND *csound, const char *ext)
+         if ((p = strrchr(lbuf, '.')) != NULL)
+           *p = '\0';
+ #endif
+-        strlcat(lbuf, ext, nBytes);
++        cs_strlcat(lbuf, nBytes, ext);
+       }
+ #ifdef __MACH__
+       /* on MacOS X, store temporary files in /tmp instead of /var/tmp */
+@@ -1075,7 +1075,7 @@ static int checkLicence(CSOUND *csound, CORFIL *cf)
+       csoundMessage(csound, "%s", p);
+       len += strlen(p);
+       licence = csound->ReAlloc(csound, licence, len);
+-      strlcat(licence, p, len);
++      cs_strlcat(licence, len, p);
+     }
+     csound->Free(csound, licence);
+     csoundErrorMsg(csound, Str("Missing end tag </CsLicence>"));
+diff --git a/include/text.h b/include/text.h
+index ad24ca3a6..f29d19080 100644
+--- a/include/text.h
++++ b/include/text.h
+@@ -118,6 +118,8 @@ extern "C" {
+   PUBLIC double cs_strtod(char* nptr, char** endptr);
+   PUBLIC int cs_sprintf(char *str, const char *format, ...);
+   PUBLIC int cs_sscanf(char *str, const char *format, ...);
++  PUBLIC void cs_strlcat (char *dest, size_t n, const char *src);
++  PUBLIC void cs_strlcpy (char *dest, size_t n, const char *src);
+ #ifdef __cplusplus
+ }
+ #endif

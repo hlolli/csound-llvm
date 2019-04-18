@@ -1,0 +1,111 @@
+diff --git a/H/csGblMtx.h b/H/csGblMtx.h
+index 44d3f2441..7398f0e42 100644
+--- a/H/csGblMtx.h
++++ b/H/csGblMtx.h
+@@ -22,93 +22,18 @@
+ */
+ #ifndef CSOUND_CSGBLMTX_H
+ 
+-
+-#ifdef HAVE_PTHREAD
+-#include <pthread.h>
+-
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-static pthread_mutex_t csound_global_lock_ = PTHREAD_MUTEX_INITIALIZER;
+-
+ void csoundLock() {
+-  pthread_mutex_lock(&csound_global_lock_);
+ }
+ 
+ void csoundUnLock() {
+-  pthread_mutex_unlock(&csound_global_lock_);
+ }
+ 
+-
+ #ifdef __cplusplus
+ }
+ #endif
+ 
+-#elif defined(_WIN32) || defined (__WIN32__)
+-#define _WIN32_WINNT 0x0600
+-#include <windows.h>
+-
+-#ifdef __cplusplus
+-extern "C" {
+-  #endif
+-
+-static INIT_ONCE g_InitOnce = INIT_ONCE_STATIC_INIT;
+-static CRITICAL_SECTION* csound_global_lock;
+-
+-static BOOL CALLBACK InitHandleFunction ( PINIT_ONCE InitOnce, PVOID Parameter,
+-    PVOID *lpContext) {
+-
+-    CRITICAL_SECTION* cs = (CRITICAL_SECTION*) malloc(sizeof(CRITICAL_SECTION));
+-    InitializeCriticalSection(cs);
+-    *lpContext = cs;
+-    return 1;
+-}
+-
+-
+-
+-void csoundLock() {
+-    BOOL status;
+-    CRITICAL_SECTION* cs;
+-
+-    status = InitOnceExecuteOnce(&g_InitOnce, InitHandleFunction, NULL, &cs);
+-    if (status) {
+-      EnterCriticalSection(cs);
+-    }
+-}
+-
+-void csoundUnLock() {
+-
+-    BOOL status;
+-    CRITICAL_SECTION* cs;
+-
+-    status = InitOnceExecuteOnce(&g_InitOnce, InitHandleFunction, NULL, &cs);
+-    if (status) {
+-      LeaveCriticalSection(cs);
+-    }
+-}
+-
+-
+-#ifdef __cplusplus
+-}
+-#endif
+-
+-#else /* END WIN32 */
+-#ifdef __cplusplus
+-extern "C" {
+-#endif
+-
+-void csoundLock() {
+-}
+-
+-void csoundUnLock() {
+-}
+-
+-#ifdef __cplusplus
+-}
+-#endif
+-
+-#endif
+-
+-
+ #endif      /* CSOUND_CSGBLMTX_H */
+diff --git a/Top/threads.c b/Top/threads.c
+index 535bc976e..e7d8dcd01 100644
+--- a/Top/threads.c
++++ b/Top/threads.c
+@@ -44,7 +44,7 @@ static CS_NOINLINE void notImplementedWarning_(const char *name)
+ }
+ #endif
+ 
+-#if defined(HAVE_PTHREAD)
++#if 0
+ 
+ #if defined(WIN32)
+ #include <windows.h>
