@@ -169,6 +169,9 @@ let sndfile = clangStdenv.mkDerivation {
         substituteInPlace LLVMIRUtil.cmake --replace \
           "include(LLVMIRUtilInternal)" \
           "include(./LLVMIRUtilInternal.cmake)"
+        # prevent sanitize from being defined twive
+        substituteInPlace Engine/csound_orc_compile.c --replace \
+          "#ifdef EMSCRIPTEN" "#ifndef EMSCRIPTEN"
       '';
 
       buildPhase = ''
