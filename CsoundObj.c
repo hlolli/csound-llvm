@@ -28,7 +28,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
-
+#include <polyglot.h>
 
 #ifdef INIT_STATIC_MODULES
 extern int init_static_modules(CSOUND *csound);
@@ -77,12 +77,10 @@ void CsoundObj_destroy(CsoundObj *self)
   free(self);
 }
 
-
-void CsoundObj_setOption(CsoundObj *self, const char *option)
+void CsoundObj_setOption(CsoundObj *self, const char* option)
 {
   csoundSetOption(self->csound, option);
 }
-
 
 int32_t CsoundObj_compileCSD(CsoundObj *self, char *csd)
 {
@@ -130,18 +128,28 @@ void CsoundObj_prepareRT(CsoundObj *self) {
 }
 
 
-uint32_t CsoundObj_compileOrc(CsoundObj *self, const char *string)
+int test_as_string_utf8(const void *str) {
+  /* printf("DEBUG"); */
+  char buffer[100];
+  int bytes = polyglot_as_string(str, buffer, sizeof(buffer), "utf-8");
+  printf("%s", buffer);
+  return bytes;
+}
+
+uint32_t CsoundObj_compileOrc(CsoundObj *self, void *str)
 {
+  char buffer[1024];
+  int bytes = polyglot_as_string(str, buffer, sizeof(buffer), "utf-8");
 
 #ifdef INIT_STATIC_MODULES
   int returnValue = init_static_modules(self->csound);
-  returnValue |= csoundCompileOrc(self->csound, (char *) string);
+  returnValue |= csoundCompileOrc(self->csound, (char *) buffer);
 #else
-  int returnValue = csoundCompileOrc(self->csound, (char *) string);
+  int returnValue = csoundCompileOrc(self->csound, (char *) buffer);
 #endif
   if(self->status == CS_RESET_STATUS) {
-   csoundStart(self->csound);
-   self->status = CS_STARTED_STATUS;
+    csoundStart(self->csound);
+    self->status = CS_STARTED_STATUS;
   }
   return returnValue;
 }
@@ -149,8 +157,8 @@ uint32_t CsoundObj_compileOrc(CsoundObj *self, const char *string)
 
 float CsoundObj_evaluateCode(CsoundObj *self, const char *code_text)
 {
-    float result = csoundEvalCode(self->csound, code_text);
-    return result;
+  float result = csoundEvalCode(self->csound, code_text);
+  return result;
 }
 
 
@@ -318,8 +326,8 @@ static int CsoundObj_midiDataRead(CSOUND *csound, void *userData, unsigned char 
     if (st < 0x80)
       goto next;
     if (st >= 0xF0 &&
-    !(st == 0xF8 || st == 0xFA || st == 0xFB ||
-      st == 0xFC || st == 0xFF))
+        !(st == 0xF8 || st == 0xFA || st == 0xFB ||
+          st == 0xFC || st == 0xFF))
       goto next;
     nbytes -= (datbyts[(st - 0x80) >> 4] + 1);
     if (nbytes < 0) break;
@@ -372,7 +380,7 @@ void CsoundObj_setMidiCallbacks(CsoundObj *self)
 
 
 int CsoundObj_openAudioOut(CsoundObj *self) {
- return 0;
+  return 0;
 }
 
 

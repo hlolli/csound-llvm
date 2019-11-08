@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.4.3)
 project(Csound)
 
-find_package(LLVM REQUIRED CONFIG)
+# find_package(LLVM REQUIRED CONFIG)
 find_package(FLEX)
 find_package(BISON)
 
@@ -26,15 +26,15 @@ set(CMAKE_COMPILER_IS_CLANG 1)
 set(EXECUTABLE_INSTALL_DIR "bin")
 set(LOCALE_INSTALL_DIR "share/locale")
 set(HEADER_INSTALL_DIR "include/csound")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g  -O0 -std=c++11 DHAVE_PTHREAD_SPIN_LOCK=1 -DEMSCRIPTEN=1 -D__BUILDING_LIBCSOUND -stdlib=libstdc++ -emit-llvm -c") #  -DNDEBUG
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -DHAVE_PTHREAD_SPIN_LOCK=1 -DEMSCRIPTEN=1 -D__BUILDING_LIBCSOUND -emit-llvm -c") # -DNDEBUG
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g  -O1 -std=c++11 DHAVE_PTHREAD_SPIN_LOCK=1 -DEMSCRIPTEN=1 -D__BUILDING_LIBCSOUND -stdlib=libstdc++ -emit-llvm -Xclang -disable-llvm-passes -c") #  -DNDEBUG
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O1 -DHAVE_PTHREAD_SPIN_LOCK=1 -DEMSCRIPTEN=1 -D__BUILDING_LIBCSOUND -emit-llvm -Xclang -disable-llvm-passes -c") # -DNDEBUG
 set(DEFAULT_OPCODEDIR "${CMAKE_INSTALL_PREFIX}/${PLUGIN_INSTALL_DIR}")
 set(libcsound_CFLAGS -D__BUILDING_LIBCSOUND)
 
 add_definitions("-DCS_DEFAULT_PLUGINDIR=\"${DEFAULT_OPCODEDIR}\"")
 add_definitions("-Wall -g -D_CSOUND_RELEASE_ ${LLVM_DEFINITIONS}  -DHAVE_PTHREAD=0 -DHAVE_ATOMIC_BUILTIN=0")
 
-include(./LLVMIRUtil.cmake)
+
 INCLUDE(CheckFunctionExists)
 INCLUDE(CheckIncludeFile)
 include(TestBigEndian)
@@ -574,8 +574,8 @@ install(TARGETS ${CSOUNDLIB}
   LIBRARY DESTINATION "${LIBRARY_INSTALL_DIR}"
   ARCHIVE DESTINATION "${LIBRARY_INSTALL_DIR}")
 
-llvmir_attach_bc_target(CSOUND_BC ${CSOUNDLIB})
-llvmir_attach_library(CSOUND_BC_LIB CSOUND_BC STATIC)
+# llvmir_attach_bc_target(CSOUND_BC ${CSOUNDLIB})
+# llvmir_attach_library(CSOUND_BC_LIB CSOUND_BC STATIC)
 
 # llvmir_attach_library(${CSOUNDLIB} ${libname} STATIC)
 
